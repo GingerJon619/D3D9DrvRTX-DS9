@@ -384,9 +384,9 @@ void UD3D9Render::DrawWorld(FSceneNode* frame) {
 		child.Coords.Origin = FVector();
 		child.Coords /= skyZone->Rotation;
 		child.Coords.Origin = skyZone->Location;
-		child.Draw[0] = NULL;
-		child.Draw[1] = NULL;
-		child.Draw[2] = NULL;
+		for (FBspDrawList*& entry : child.Draw) {
+			entry = NULL;
+		};
 		child.Sprite = NULL;
 		d3d9Dev->startWorldDraw(&child);
 		drawFrame(&child, d3d9Dev, modelFacets, objs, lockedTextures, true);
@@ -453,8 +453,8 @@ void UD3D9Render::drawFrame(FSceneNode* frame, UD3D9RenderDevice* d3d9Dev, Model
 	std::unordered_set<ABrush*> visibleMovers;
 	std::bitset<64> visibleZoneBits;
 	visibleZoneBits[frame->ZoneNumber] = true;
-	for (int pass : {0, 1, 2}) {
-		for (FBspDrawList* drawList = frame->Draw[pass]; drawList; drawList = drawList->Next) {
+	for (FBspDrawList*& pass : frame->Draw) {
+		for (FBspDrawList* drawList = pass; drawList; drawList = drawList->Next) {
 			if (frame->Level->BrushTracker && frame->Level->BrushTracker->SurfIsDynamic(drawList->iSurf)) {
 				visibleMovers.insert(frame->Level->Model->Surfs(drawList->iSurf).Actor);
 			}
