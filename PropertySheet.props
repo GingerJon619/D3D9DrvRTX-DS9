@@ -34,12 +34,12 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <OutputFile>$(UNREAL_INSTALL_DIR)\System\D3D9DrvRTX.dll</OutputFile>
       <AdditionalDependencies>Core.lib;Engine.lib;Render.lib;winmm.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateMapFile>true</GenerateMapFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
-      <ProgramDatabaseFile>.\Lib/D3D9Drv.pdb</ProgramDatabaseFile>
-      <ImportLibrary>.\Lib/D3D9Drv.lib</ImportLibrary>
+      <ImportLibrary>.\Lib\$(TargetName).lib</ImportLibrary>
+      <ProgramDatabaseFile>.\Lib\$(TargetName).pdb</ProgramDatabaseFile>
+      <MapFileName>.\Lib\$(TargetName).map</MapFileName>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

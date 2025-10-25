@@ -85,6 +85,13 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: D3D9DrvRTX-${{env.GITHUB_SHA_SHORT}}
-        path: Releases/${{env.GITHUB_SHA_SHORT}}/*
-        retention-days: 30
+        path: Releases/${{env.GITHUB_SHA_SHORT}}/*.zip
+        retention-days: 45
         compression-level: 1
+    - name: Upload Symbols Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: D3D9DrvRTX-${{env.GITHUB_SHA_SHORT}}-symbols
+        path: Releases/${{env.GITHUB_SHA_SHORT}}/symbols/
+        retention-days: 30
+        compression-level: 9

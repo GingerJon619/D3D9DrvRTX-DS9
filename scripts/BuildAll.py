@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import zipfile
 import subprocess
+import shutil
 
 from termcolor import colored
 
@@ -38,9 +39,8 @@ def switch_game(game_code: str):
 	print(f"Switching to '{colored(game_code, 'cyan')}'", flush=True)
 	subprocess.run([f"{game_code}.bat"], shell=True, check=True)
 
-def build(version: str | None = None, x64: bool = False):
+def build(version: str | None = None, configuration: str = "Release", x64: bool = False):
 	solution_path = VS_PROJECT_PATH / "D3D9Drv.sln"
-	configuration = "Release"
 	platform = "x64" if x64 else "Win32"
 	
 	# Build the Visual Studio solution
@@ -89,10 +89,17 @@ def zip_build(build_name: str, version_path: Path, x64: bool = False):
 			zip_file.write(file_path, arcname=arc_path)
 	
 	print(f"Zipped at: {zip_file_path}")
+	
+def copy_symbols(game_code: str, version_path: Path):
+	symbols_path = version_path / "symbols" / game_code
+	symbols_path.parent.mkdir(parents=True, exist_ok=True)
+	shutil.copytree(VS_PROJECT_PATH / "Lib", symbols_path, dirs_exist_ok=True)
+	print(f"Symbols copied to: {symbols_path}")
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--version-extra", required=False)
-parser.add_argument("-o", "--overwrite", action="store_true", required=False)
+parser.add_argument("--version-extra", required=False, help="Overrides the version number to build (used for CI and testing)")
+parser.add_argument("-o", "--overwrite", action="store_true", required=False, help="Continue the build even if the version directory exists, overwriting the existing one")
+parser.add_argument("--configuration", default="Release", required=False, help="Overrides the msvc compile config (Release, Debug)")
 args = parser.parse_args()
 
 if args.version_extra:
@@ -121,12 +128,14 @@ games_codes = [
 
 for game_code in games_codes:
 	switch_game(game_code)
-	build(args.version_extra)
+	build(args.version_extra, configuration=args.configuration)
 	build_name = f"D3D9DrvRTX-{game_code}-{version}"
 	zip_build(build_name, version_path)
+	copy_symbols(game_code, version_path)
 	print(flush=True)
 	if game_code == "Unreal_227k_12":
-		build(args.version_extra, x64=True)
+		build(args.version_extra, configuration=args.configuration, x64=True)
 		build_name = f"D3D9DrvRTX-{game_code}-x64-{version}"
 		zip_build(build_name, version_path, x64=True)
+		copy_symbols(f"{game_code}-x64", version_path)
 		print(flush=True)
