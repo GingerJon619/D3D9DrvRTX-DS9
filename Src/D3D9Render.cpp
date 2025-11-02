@@ -221,6 +221,7 @@ static bool getRenderInterfaceActors(AActor* actor, FSceneNode* frame, std::vect
 
 void UD3D9Render::onLevelChange(FSceneNode* frame) {
 	currentLevelData.currentLevel = frame->Level;
+	currentLevelData.currentLevelName = frame->Level->URL.Map;
 	currentLevelData.facetsMemMark.Pop();
 	currentLevelData.facets = ModelFacets();
 	getLevelModelFacets(frame, currentLevelData.facets);
@@ -368,7 +369,7 @@ void UD3D9Render::DrawWorld(FSceneNode* frame) {
 	OccludeFrame(frame);
 #endif
 
-	if (currentLevelData.currentLevel != frame->Level) {
+	if (currentLevelData.currentLevel != frame->Level || currentLevelData.currentLevelName != frame->Level->URL.Map) {
 		onLevelChange(frame);
 	}
 

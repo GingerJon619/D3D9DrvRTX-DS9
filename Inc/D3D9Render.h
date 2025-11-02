@@ -52,6 +52,7 @@ private:
 	};
 	static struct {
 		ULevel* currentLevel;
+		FString currentLevelName;
 		FTime lastLevelTime;
 		RTXAnchors anchors;
 		ModelFacets facets;
