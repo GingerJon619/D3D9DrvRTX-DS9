@@ -2675,6 +2675,14 @@ void UD3D9RenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT X,
 		//Set default texture state
 		SetDefaultTextureState();
 
+#if UNDYING
+		if (Info.Format != TEXF_RGBA8) {
+			if (Info.Palette && Info.Palette[0x80].A != 0xFF && !(PolyFlags & PF_Translucent)) {
+				PolyFlags |= PF_Highlighted;
+			}
+		}
+#endif
+
 		SetBlend(PolyFlags, true);
 		SetTextureNoPanBias(0, Info, PolyFlags);
 
