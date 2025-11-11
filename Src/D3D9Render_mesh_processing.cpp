@@ -479,6 +479,10 @@ void UD3D9RenderDevice::renderMeshActor(FSceneNode* frame, AActor* actor, Render
 	TRefArray<FMeshTri> tris = mesh->GetTris(actor);
 	INT numVerts = mesh->FrameVerts(actor);
 
+	FVector* samples = New<FVector>(GMem, numVerts);
+	// GetFrame in the normal position first, lets the cloth sims work in the correct space
+	mesh->GetFrame(samples, sizeof(samples[0]), GMath.UnitCoords, actor, frame);
+
 	// The old switcheroo, trick the game to not transform the mesh verts to object position
 	FVector origLoc = actor->Location;
 	FVector origPrePiv = actor->PrePivot;
@@ -500,7 +504,6 @@ void UD3D9RenderDevice::renderMeshActor(FSceneNode* frame, AActor* actor, Render
 	}
 	actor->DrawScale = 1.0f;
 
-	FVector* samples = New<FVector>(GMem, numVerts);
 	mesh->GetFrame(samples, sizeof(samples[0]), GMath.UnitCoords, actor, frame);
 	INT numTris = tris.Num();
 
