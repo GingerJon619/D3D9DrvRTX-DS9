@@ -706,23 +706,33 @@ void UD3D9Render::getSurfaceDecals(FSceneNode* frame, const SurfaceData& surface
 		} else {
 			texInfo = &lockedTextures[texture];
 		}
-
-		DWORD polyFlags = PF_Modulated;
-#ifdef RUNE
+		DWORD polyFlags = 0;
+#if RUNE || UNDYING
 		switch (decal->Actor->Style) {
 		case STY_Masked:
-			polyFlags = PF_Masked; break;
+			polyFlags |= PF_Masked; break;
 		case STY_Translucent:
-			polyFlags = PF_Translucent; break;
+			polyFlags |= PF_Translucent; break;
 		case STY_Modulated:
-			polyFlags = PF_Modulated; break;
+			polyFlags |= PF_Modulated; break;
+#if RUNE
 		case STY_AlphaBlend:
 			polyFlags = PF_AlphaBlend; break;
 			texture->Alpha = decal->Actor->AlphaScale;
+#elif UNDYING
+		case STY_Highlight:
+			polyFlags |= PF_Highlighted; break;
+		case STY_AlphaBlendZ:
+			polyFlags |= PF_Occlude;
+		case STY_AlphaBlend:
+			polyFlags |= PF_Modulated | PF_Translucent; break;
+#endif
 		default:
-			break;
+			polyFlags |= PF_Modulated;
 		}
-#endif // RUNE
+#else
+		polyFlags |= PF_Modulated;
+#endif // RUNE | UNDYING
 
 		std::vector<std::vector<FTransTexture>>& decalPoints = decals.get(texInfo, polyFlags);
 
