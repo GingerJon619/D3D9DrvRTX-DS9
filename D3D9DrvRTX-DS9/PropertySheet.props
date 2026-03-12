@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <UNREAL_SDK_DIR>.\sdk</UNREAL_SDK_DIR>
+    <UNREAL_INSTALL_DIR>.\install</UNREAL_INSTALL_DIR>
+    <UNREAL_EXE_NAME>DS9.exe</UNREAL_EXE_NAME>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IncludePath>$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(UNREAL_SDK_DIR)\Core\Lib\;$(UNREAL_SDK_DIR)\Engine\Lib\;$(UNREAL_SDK_DIR)\Render\Lib\;$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
+    <OutDir>$(UNREAL_INSTALL_DIR)\System\</OutDir>
+    <TargetName>D3D9DrvRTX</TargetName>
+    <TargetExt>.dll</TargetExt>
+    <IntDir>Build\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>Inc;$(UNREAL_SDK_DIR)\Core\Inc;$(UNREAL_SDK_DIR)\Render\Inc;$(UNREAL_SDK_DIR)\Engine\Inc;external\json\include;external\RemixAPI\include;external\xxHash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>4121;4324;4458;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+      <WarningLevel>Level4</WarningLevel>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PreprocessorDefinitions>DEEP_SPACE_NINE;WIN32;WIN32_LEAN_AND_MEAN;WINDOWS_IGNORE_PACKING_MISMATCH;_WINDOWS;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>Core.lib;Engine.lib;Render.lib;winmm.lib;d3dx9.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateMapFile>true</GenerateMapFile>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <ImportLibrary>.\Lib\$(TargetName).lib</ImportLibrary>
+      <ProgramDatabaseFile>.\Lib\$(TargetName).pdb</ProgramDatabaseFile>
+      <MapFileName>.\Lib\$(TargetName).map</MapFileName>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="UNREAL_SDK_DIR">
+      <Value>$(UNREAL_SDK_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="UNREAL_INSTALL_DIR">
+      <Value>$(UNREAL_INSTALL_DIR)</Value>
+    </BuildMacro>
+    <BuildMacro Include="UNREAL_EXE_NAME">
+      <Value>$(UNREAL_EXE_NAME)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
