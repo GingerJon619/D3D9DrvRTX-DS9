@@ -215,17 +215,23 @@ static void SC_AddBoolConfigParam(DWORD BitMaskOffset, const TCHAR* pName, UBOOL
 #else
 	param = (((defaultValue) != 0) ? 1 : 0) << BitMaskOffset; //Doesn't exactly work like a UBOOL "// Boolean 0 (false) or 1 (true)."
 #endif
+#if !DEEP_SPACE_NINE
 	new(UD3D9RenderDevice::StaticClass(), pName, RF_Public)UBoolProperty(EC_CppProperty, InOffset, TEXT("Options"), CPF_Config);
+#endif
 }
 
 static void SC_AddIntConfigParam(const TCHAR* pName, INT& param, ECppProperty EC_CppProperty, INT InOffset, INT defaultValue) {
 	param = defaultValue;
+#if !DEEP_SPACE_NINE
 	new(UD3D9RenderDevice::StaticClass(), pName, RF_Public)UIntProperty(EC_CppProperty, InOffset, TEXT("Options"), CPF_Config);
+#endif
 }
 
 static void SC_AddFloatConfigParam(const TCHAR* pName, FLOAT& param, ECppProperty EC_CppProperty, INT InOffset, FLOAT defaultValue) {
 	param = defaultValue;
+#if !DEEP_SPACE_NINE
 	new(UD3D9RenderDevice::StaticClass(), pName, RF_Public)UFloatProperty(EC_CppProperty, InOffset, TEXT("Options"), CPF_Config);
+#endif
 }
 
 #if UTGLR_ALT_STATIC_CONSTRUCTOR
@@ -314,12 +320,14 @@ void UD3D9RenderDevice::StaticConstructor() {
 	SC_AddFloatConfigParam(TEXT("LightRadiusExponent"), CPP_PROPERTY_LOCAL(LightRadiusExponent), 0.55f);
 
 	SurfaceSelectionColor = FColor(0, 0, 31, 31);
+#if !DEEP_SPACE_NINE
 	//new(GetClass(), TEXT("SurfaceSelectionColor"), RF_Public)UStructProperty(CPP_PROPERTY(SurfaceSelectionColor), TEXT("Options"), CPF_Config, FindObjectChecked<UStruct>(NULL, TEXT("Core.Object.Color"), 1));
 	UStruct* ColorStruct = FindObject<UStruct>(UObject::StaticClass(), TEXT("Color"));
 	if (!ColorStruct)
 		ColorStruct = new(UObject::StaticClass(), TEXT("Color")) UStruct(NULL);
 	ColorStruct->PropertiesSize = sizeof(FColor);
 	new(UD3D9RenderDevice::StaticClass(), TEXT("SurfaceSelectionColor"), RF_Public)UStructProperty(CPP_PROPERTY(SurfaceSelectionColor), TEXT("Options"), CPF_Config, ColorStruct);
+#endif
 
 #undef CPP_PROPERTY_LOCAL
 
@@ -461,7 +469,7 @@ static void FASTCALL Buffer3Verts(UD3D9RenderDevice *pRD, FTransTexture** Pts) {
 		pVertexColorArray->y = P->Point.Y;
 		pVertexColorArray->z = P->Point.Z;
 		if (pRD->m_requestedColorFlags & UD3D9RenderDevice::CF_FOG_MODE) {
-			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog.W);
+			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog);
 
 			pVertexColorArray->color = FPlaneTo_BGRScaled_A255(&P->Light, f255_Times_One_Minus_FogW);
 		}
@@ -535,7 +543,7 @@ static void FASTCALL Buffer3FoggedVerts(UD3D9RenderDevice *pRD, FTransTexture** 
 		pVertexColorArray->x = P->Point.X;
 		pVertexColorArray->y = P->Point.Y;
 		pVertexColorArray->z = P->Point.Z;
-		FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog.W);
+		FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog);
 		pVertexColorArray->color = FPlaneTo_BGRScaled_A255(&P->Light, f255_Times_One_Minus_FogW);
 		pVertexColorArray++;
 	}
@@ -560,7 +568,7 @@ void UD3D9RenderDevice::BufferAdditionalClippedVerts(FTransTexture** Pts, INT Nu
 		pVertexColorArray->y = P->Point.Y;
 		pVertexColorArray->z = P->Point.Z;
 		if (m_requestedColorFlags & CF_FOG_MODE) {
-			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog.W);
+			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog);
 			pVertexColorArray->color = FPlaneTo_BGRScaled_A255(&P->Light, f255_Times_One_Minus_FogW);
 		}
 		else if (m_requestedColorFlags & CF_COLOR_ARRAY) {
@@ -584,7 +592,7 @@ void UD3D9RenderDevice::BufferAdditionalClippedVerts(FTransTexture** Pts, INT Nu
 		pVertexColorArray->y = P->Point.Y;
 		pVertexColorArray->z = P->Point.Z;
 		if (m_requestedColorFlags & CF_FOG_MODE) {
-			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog.W);
+			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog);
 			pVertexColorArray->color = FPlaneTo_BGRScaled_A255(&P->Light, f255_Times_One_Minus_FogW);
 		}
 		else if (m_requestedColorFlags & CF_COLOR_ARRAY) {
@@ -608,7 +616,7 @@ void UD3D9RenderDevice::BufferAdditionalClippedVerts(FTransTexture** Pts, INT Nu
 		pVertexColorArray->y = P->Point.Y;
 		pVertexColorArray->z = P->Point.Z;
 		if (m_requestedColorFlags & CF_FOG_MODE) {
-			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog.W);
+			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog);
 			pVertexColorArray->color = FPlaneTo_BGRScaled_A255(&P->Light, f255_Times_One_Minus_FogW);
 		}
 		else if (m_requestedColorFlags & CF_COLOR_ARRAY) {
@@ -1416,7 +1424,7 @@ UBOOL UD3D9RenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 		}
 		FString Str;
 		for (const FPlane& mode : Relevant) {
-			Str += FString::Printf(TEXT("%ix%i "), (INT)mode.X, (INT)mode.Y);
+			Str += *FString::Printf(TEXT("%ix%i "), (INT)mode.X, (INT)mode.Y);
 		}
 		Ar.Log(*Str);
 		return 1;
@@ -1431,7 +1439,7 @@ UBOOL UD3D9RenderDevice::Exec(const TCHAR* Cmd, FOutputDevice& Ar) {
 	unguard;
 }
 
-void UD3D9RenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* InHitData, INT* InHitSize) {
+UBOOL UD3D9RenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* InHitData, INT* InHitSize) {
 #ifdef UTGLR_DEBUG_SHOW_CALL_COUNTS
 {
 	static int si;
@@ -1602,6 +1610,7 @@ void UD3D9RenderDevice::Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane Scre
 	bufferTileDraws = true;
 
 	unguard;
+	return 1;
 }
 
 #if !KLINGON_HONOR_GUARD
@@ -1630,6 +1639,7 @@ void UD3D9RenderDevice::SetSceneNode(FSceneNode* Frame) {
 	FLOAT rProjZ = appTan(Viewport->Actor->FovAngle * PI / 360.0);
 	m_RFX2 = 2.0f * rProjZ * rcpFrameFX;
 	m_RFY2 = 2.0f * rProjZ * rcpFrameFX;
+	Frame->RProj = FVector(m_RFX2, m_RFY2, rProjZ);
 
 	//Remember Frame->X and Frame->Y
 	m_sceneNodeX = Frame->X;
@@ -2412,7 +2422,7 @@ void UD3D9RenderDevice::DrawGouraudPolygonOld(FSceneNode* Frame, FTextureInfo& I
 			destVertexColor.color = 0xFFFFFFFF;
 		}
 		else if (drawFog) {
-			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog.W);
+			FLOAT f255_Times_One_Minus_FogW = 255.0f * (1.0f - P->Fog);
 			destVertexColor.color = FPlaneTo_BGRScaled_A255(&P->Light, f255_Times_One_Minus_FogW);
 		}
 		else {
@@ -2603,7 +2613,8 @@ void UD3D9RenderDevice::DrawTile(FSceneNode* Frame, FTextureInfo& Info, FLOAT X,
 	guard(UD3D9RenderDevice::DrawTile);
 
 	if (bufferTileDraws) {
-		TileFuncCall& call = bufferedTileDraws.emplace_back();
+		bufferedTileDraws.push_back(TileFuncCall{});
+		TileFuncCall& call = bufferedTileDraws.back();
 		// And we pray that the pointers in here don't go stale!
 		call.frame = *Frame;
 		call.texInfo = Info;
@@ -5956,7 +5967,7 @@ UINT UD3D9RenderDevice::BufferStaticComplexSurfaceGeometry(const FSurfaceFacet& 
 		}
 		UINT numPolys = NumPts - 2;
 
-		FTransform** pPts = &Poly->Pts[0];
+		FTransTexture** pPts = &Poly->Pts[0];
 		const FVector* const hubPoint = &(*pPts++)->Point;
 		const FVector* secondPoint = &(*pPts++)->Point;
 

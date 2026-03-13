@@ -227,7 +227,8 @@ public:
     DWORD GetFlags() const;
     void  SetFlags(DWORD F) const;
     void  ClearFlags(DWORD F) const;
-    INT   IsValid() const;
+    INT   IsValid();                                                         // non-const in lib
+    INT   IsValid() const { return const_cast<FName*>(this)->IsValid(); }   // inline const wrapper
 
     const ANSICHAR* operator*() const
     {
@@ -280,8 +281,9 @@ public:
 // Math types
 // Note: methods inside CORE_API structs/classes must NOT carry CORE_API.
 //=============================================================================
-struct CORE_API FVector
+class FVector
 {
+public:
     // X/Y/Z with R/G/B aliases
     union { struct { FLOAT X,Y,Z; }; struct { FLOAT R,G,B; }; };
     FVector() {}
@@ -329,8 +331,9 @@ struct CORE_API FVector
     FVector C3DTransformPointBy(const struct FCoords& C) const;
 };
 
-struct CORE_API FPlane : public FVector
+class FPlane : public FVector
 {
+public:
     FLOAT W;
     FPlane() {}
     FPlane(const FVector& N, FLOAT d)           : FVector(N),        W(d) {}
@@ -340,8 +343,9 @@ struct CORE_API FPlane : public FVector
     FPlane TransformPlaneByOrtho(const struct FCoords& C) const;
 };
 
-struct CORE_API FRotator
+class FRotator
 {
+public:
     INT Pitch, Yaw, Roll;
     FRotator() {}
     FRotator(INT p, INT y, INT r) : Pitch(p), Yaw(y), Roll(r) {}
@@ -353,10 +357,12 @@ struct CORE_API FRotator
     FRotator GridSnap(const FRotator& G) const;
 };
 
-struct CORE_API FCoords
+class FCoords
 {
+public:
     FCoords& operator/=(const FLOAT S) { XAxis/=S; YAxis/=S; ZAxis/=S; return *this; }
     FCoords& operator*=(const FLOAT S) { XAxis*=S; YAxis*=S; ZAxis*=S; return *this; }
+    FCoords  operator* (const FLOAT S) const { FCoords R=*this; R.XAxis*=S; R.YAxis*=S; R.ZAxis*=S; return R; }
     FCoords& operator/=(const FRotator& R);   // unrotate (inline impl below)
     FCoords& operator*=(const FCoords& C);    // compose frames (inline impl below)
     FVector Origin, XAxis, YAxis, ZAxis;
@@ -382,8 +388,9 @@ struct FModelCoords
 struct CORE_API FQuat   { FLOAT X,Y,Z,W; FQuat(){} FQuat(FLOAT x,FLOAT y,FLOAT z,FLOAT w):X(x),Y(y),Z(z),W(w){} };
 struct CORE_API FMatrix { FLOAT M[4][4]; FMatrix(){} };
 
-struct CORE_API FBox
+class FBox
 {
+public:
     FVector Min, Max;
     BYTE    IsValid;
     FBox() : IsValid(0) {}
@@ -425,7 +432,12 @@ struct CORE_API FColor
     FColor() {}
     FColor(BYTE r, BYTE g, BYTE b)         : R(r), G(g), B(b), A(255) {}
     FColor(BYTE r, BYTE g, BYTE b, BYTE a) : R(r), G(g), B(b), A(a)   {}
-    explicit FColor(const FPlane& P);
+    explicit FColor(const FPlane& P) {
+        R = (BYTE)(P.X < 0.f ? 0 : P.X > 1.f ? 255 : (INT)(P.X*255.f));
+        G = (BYTE)(P.Y < 0.f ? 0 : P.Y > 1.f ? 255 : (INT)(P.Y*255.f));
+        B = (BYTE)(P.Z < 0.f ? 0 : P.Z > 1.f ? 255 : (INT)(P.Z*255.f));
+        A = (BYTE)(P.W < 0.f ? 0 : P.W > 1.f ? 255 : (INT)(P.W*255.f));
+    }
     bool operator==(const FColor& C) const { return R==C.R&&G==C.G&&B==C.B&&A==C.A; }
     bool operator!=(const FColor& C) const { return !(*this==C); }
     FColor Brighten(INT Amount);
@@ -453,7 +465,7 @@ struct FTaggedMemory { BYTE* Next; };
 class CORE_API FMemStack
 {
 public:
-    BYTE* Push(INT AllocSize, INT Align=4);
+    BYTE* Push(INT AllocSize, INT Align=4) { return PushBytes(AllocSize, Align); }
 public:
     BYTE*          Top;
     BYTE*          End;
@@ -619,11 +631,11 @@ public:
     virtual void  Destroy();
     virtual void  Serialize(FArchive& Ar);
     virtual UBOOL IsPendingKill()  { return 0; }
-    virtual FString GetStateName() const;
+    virtual FString GetStateName() const { return FString(TEXT("None")); }
     virtual void  InitExecution();
     virtual void  ShutdownAfterError();
     virtual void  PostEditChange();
-    virtual void  CallFunction(struct FFrame& Stack, void* Result, class UFunction* F);
+    virtual void  CallFunction(struct FFrame& Stack, void* Result, class UFunction* F) {}
     virtual UBOOL ScriptConsoleExec(const ANSICHAR* Cmd, FOutputDevice& Ar, UObject* Exec);
     virtual void  Register();
     virtual void  LanguageChange();
@@ -703,7 +715,9 @@ public:
     const ANSICHAR* GetPathName(UObject* StopOuter = nullptr, ANSICHAR* Buf = nullptr) const;
     UBOOL IsA(UClass* SomeBase)   const;
     UBOOL IsIn(UObject* SomeOuter) const;
-    UBOOL IsValid() const;
+    UBOOL IsValid();           // non-const version found in Core.lib
+    UBOOL IsValid() const { return const_cast<UObject*>(this)->IsValid(); }
+    // DS9: lib has non-const IsValid; linker also needs const — provide inline const overload
     ULinkerLoad* GetLinker();
     INT   GetLinkerIndex();
     void  LoadConfig(UBOOL Propagate = 0, UClass* Cls = nullptr, const ANSICHAR* ForceSec = nullptr);
@@ -916,22 +930,25 @@ extern CORE_API DWORD           GUglyHackFlags;  // ?GUglyHackFlags@@3KA
 // Free functions are fine with CORE_API — only member functions in CORE_API
 // classes cause C2487.
 //=============================================================================
-CORE_API void      VARARGS appError(const ANSICHAR* Msg, ...);
-CORE_API DOUBLE    appSeconds();
-CORE_API DOUBLE    appSecondsSlow();
-CORE_API void      appSleep(FLOAT Seconds);              // ?appSleep@@YAXM@Z
-CORE_API void      appRequestExit(INT Immediate = 0);    // ?appRequestExit@@YAXH@Z
-CORE_API ANSICHAR* VARARGS appSprintf(const ANSICHAR* Fmt, ...);
+// DS9 compat: provide inline implementations for functions missing/mismatched in DS9 libs
+CORE_API DOUBLE    appSecondsSlow();  // declare before use in appSeconds inline below
+#include <stdio.h>
+#pragma warning(push)
+#pragma warning(disable: 4273 4100)
+inline void VARARGS appError(const ANSICHAR* Msg, ...) { DebugBreak(); }
+inline DOUBLE       appSeconds() { return appSecondsSlow(); }
+inline void         appMemzero(void* Dest, INT Count) { memset(Dest, 0, Count); }
+inline void         appMemcpy(void* Dest, const void* Src, INT Count) { memcpy(Dest, Src, Count); }
+inline ANSICHAR* VARARGS appSprintf(const ANSICHAR* Fmt, ...) {
+    static ANSICHAR Buf[8192]; va_list Args; va_start(Args, Fmt);
+    vsnprintf(Buf, sizeof(Buf), Fmt, Args); va_end(Args); return Buf;
+}
+#pragma warning(pop)
+CORE_API void      appSleep(FLOAT Seconds);
+CORE_API void      appRequestExit(INT Immediate = 0);
 CORE_API void*     appMalloc(INT Size, const ANSICHAR* Tag);
 CORE_API void      appFree(void* Ptr);
 CORE_API void*     appRealloc(void* Ptr, INT NewSize, const ANSICHAR* Tag);
-CORE_API void      appMemzero(void* Dest, INT Count);
-CORE_API void      appMemcpy(void* Dest, const void* Src, INT Count);
-CORE_API void      appMemmove(void* Dest, const void* Src, INT Count);
-CORE_API INT       appMemcmp(const void* A, const void* B, INT Count);
-CORE_API INT       appStrcmp(const ANSICHAR* A, const ANSICHAR* B);
-CORE_API INT       appStricmp(const ANSICHAR* A, const ANSICHAR* B);
-CORE_API ANSICHAR* appStrcpy(ANSICHAR* Dest, const ANSICHAR* Src);
 CORE_API ANSICHAR* appStrcat(ANSICHAR* Dest, const ANSICHAR* Src);
 CORE_API INT       appStrlen(const ANSICHAR* S);
 CORE_API UBOOL     appLoadFileToArray(TArray<BYTE>& Result, const ANSICHAR* Filename, FFileManager* FM = nullptr);
@@ -946,6 +963,7 @@ inline FLOAT appFabs(FLOAT f)  { return fabsf(f);  }
 inline FLOAT appSqrt(FLOAT f)  { return sqrtf(f);  }
 inline FLOAT appSin(FLOAT f)   { return sinf(f);   }
 inline FLOAT appCos(FLOAT f)   { return cosf(f);   }
+inline DOUBLE appTan(DOUBLE f) { return tan(f);    }
 inline FLOAT appAsin(FLOAT f)  { return asinf(f);  }
 inline FLOAT appAcos(FLOAT f)  { return acosf(f);  }
 inline FLOAT appAtan(FLOAT f)  { return atanf(f);  }
@@ -962,6 +980,31 @@ inline FLOAT Square(FLOAT f)                       { return f*f; }
 inline FLOAT FVector::Size()        const { return appSqrt(X*X+Y*Y+Z*Z); }
 inline FLOAT FVector::Size2D()      const { return appSqrt(X*X+Y*Y); }
 inline bool  FVector::IsNearlyZero()const { return appFabs(X)<1e-4f && appFabs(Y)<1e-4f && appFabs(Z)<1e-4f; }
+// DS9: lib returns INT from Normalize; provide inline FLOAT version
+inline FLOAT FVector::Normalize() {
+    FLOAT Mag = appSqrt(X*X+Y*Y+Z*Z);
+    if (Mag > 1e-8f) { FLOAT Inv=1.f/Mag; X*=Inv; Y*=Inv; Z*=Inv; }
+    return Mag;
+}
+inline FVector FVector::SafeNormal() const {
+    FLOAT Sq = X*X+Y*Y+Z*Z;
+    if (Sq < 1e-8f) return FVector(0,0,0);
+    FLOAT Inv = 1.f/appSqrt(Sq);
+    return FVector(X*Inv, Y*Inv, Z*Inv);
+}
+inline FVector FVector::UnsafeNormal() const { FLOAT Inv=1.f/appSqrt(X*X+Y*Y+Z*Z); return FVector(X*Inv,Y*Inv,Z*Inv); }
+inline FVector FVector::TransformVectorBy(const FCoords& C) const {
+    return FVector(X*C.XAxis.X+Y*C.YAxis.X+Z*C.ZAxis.X,
+                   X*C.XAxis.Y+Y*C.YAxis.Y+Z*C.ZAxis.Y,
+                   X*C.XAxis.Z+Y*C.YAxis.Z+Z*C.ZAxis.Z);
+}
+inline FVector FVector::TransformPointBy(const FCoords& C) const {
+    FVector T = *this - C.Origin;
+    return FVector(T.X*C.XAxis.X+T.Y*C.YAxis.X+T.Z*C.ZAxis.X,
+                   T.X*C.XAxis.Y+T.Y*C.YAxis.Y+T.Z*C.ZAxis.Y,
+                   T.X*C.XAxis.Z+T.Y*C.YAxis.Z+T.Z*C.ZAxis.Z);
+}
+// (FName::IsValid const overload is defined inline in the FName class body above)
 
 //=============================================================================
 // FFileManager stub
@@ -971,18 +1014,26 @@ class CORE_API FFileManager { public: virtual ~FFileManager() {} };
 //=============================================================================
 // Math globals and utility functions
 //=============================================================================
-struct FCoords;  // forward decl for FMath
-struct FMath
+// DS9: FGlobalMath (matches lib's FGlobalMath class, V-mangling for GMath global)
+class FGlobalMath;  // forward decl
+class FCoords;  // forward decl for FMath
+class FGlobalMath
 {
+public:
     FLOAT CosTab[16384];
     FLOAT SinTab[16384];
     FLOAT SqrtTab[16384];
     FCoords UnitCoords;  // identity coordinate system
 };
-extern CORE_API FMath GMath;
+typedef FGlobalMath FMath;
+extern CORE_API FGlobalMath GMath;
+// VectorMem: DS9's lib exports GMem, not VectorMem
+#define VectorMem GMem
 
 template<class T>
 T* NewZeroed(FMemStack& Mem) { T* p = (T*)Mem.Push(sizeof(T),alignof(T)); memset(p,0,sizeof(T)); return p; }
+template<class T>
+T* NewZeroed(FMemStack& Mem, INT Count) { T* p = (T*)Mem.Push(sizeof(T)*Count,alignof(T)); memset(p,0,sizeof(T)*Count); return p; }
 
 inline INT  appRound(FLOAT F)  { return (INT)(F + 0.5f); }
 inline void debugf(const ANSICHAR* Fmt, ...) {}
@@ -1146,7 +1197,7 @@ inline const T* Cast(const F* obj) {
 // VectorMem (used in UTGLR paths not guarded by UTGLR_NO_VECTOR_MEM)
 //=============================================================================
 #if !defined(UTGLR_NO_VECTOR_MEM)
-extern CORE_API FMemStack VectorMem;
+// VectorMem is aliased to GMem above via #define
 #endif
 
 //=============================================================================

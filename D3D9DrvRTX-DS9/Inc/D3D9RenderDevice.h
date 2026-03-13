@@ -938,7 +938,7 @@ class UD3D9RenderDevice : public RENDERDEVICE_SUPER {
 #else
 	void Flush(UBOOL AllowPrecache) override;
 #endif
-	void Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* InHitData, INT* InHitSize) override;
+	UBOOL Lock(FPlane InFlashScale, FPlane InFlashFog, FPlane ScreenClear, DWORD RenderLockFlags, BYTE* InHitData, INT* InHitSize) override;
 	void Unlock(UBOOL Blit) override;
 	void DrawComplexSurface(FSceneNode* Frame, FSurfaceInfo& Surface, FSurfaceFacet& Facet) override;
 	void DrawGouraudPolygon(FSceneNode* Frame, FTextureInfo& Info, FTransTexture** Pts, INT NumPts, DWORD PolyFlags, FSpanBuffer* Span) override;
@@ -957,7 +957,7 @@ class UD3D9RenderDevice : public RENDERDEVICE_SUPER {
 #endif
 	void EndFlash() override;
 
-#if !KLINGON_HONOR_GUARD && !DEEP_SPACE_NINE
+#if !KLINGON_HONOR_GUARD
 	void SetSceneNode(FSceneNode* Frame) override;
 	void PrecacheTexture(FTextureInfo& Info, DWORD PolyFlags) override;
 #endif

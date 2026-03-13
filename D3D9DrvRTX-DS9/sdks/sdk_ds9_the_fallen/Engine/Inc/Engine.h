@@ -222,6 +222,19 @@ struct FSurfaceFacet
 };
 
 //=============================================================================
+// FTransform – transformed vertex (used by renderer)
+// NOTE: Moved here from below so FTransSample can inherit from it.
+//=============================================================================
+struct FTransform
+{
+    FVector Point;      // transformed point
+    FLOAT   RZ;         // 1/Z
+    FLOAT   ScreenX;
+    FLOAT   ScreenY;
+    DWORD   Flags;      // clipping flags
+};
+
+//=============================================================================
 // FTransSample / FTransTexture
 //=============================================================================
 struct FTransSample : public FTransform
@@ -349,18 +362,6 @@ struct FVert
 };
 
 //=============================================================================
-// FTransform – transformed vertex (used by renderer)
-//=============================================================================
-struct FTransform
-{
-    FVector Point;      // transformed point
-    FLOAT   RZ;         // 1/Z
-    FLOAT   ScreenX;
-    FLOAT   ScreenY;
-    DWORD   Flags;      // clipping flags
-};
-
-//=============================================================================
 // FBspSurf – BSP surface (build 338 layout)
 //=============================================================================
 struct ENGINE_API FBspSurf
@@ -461,7 +462,7 @@ struct FFogSurf
 };
 
 
-struct ENGINE_API FSurfaceInfo
+struct FSurfaceInfo  // ENGINE_API removed: DS9 lib ctor signature mismatches; use inline ctor
 {
     DWORD        PolyFlags;     // polygon flags
     FPlane       FlatColor;     // flat shading color
@@ -514,6 +515,8 @@ struct ENGINE_API FSceneNode
     // Actor lists
     FDynamicSprite* DynSprites;
     FActorLink*    OwnedActors;
+
+    FVector      RProj;             // reciprocal projection vector (Z = tan(HalfFOV))
 
     void ComputeRenderCoords(FVector& CamOrigin, FRotator& CamRot);
     void ComputeRenderSize();
@@ -638,6 +641,15 @@ public:
     FLOAT            DefaultAnim;
     static UClass* StaticClass();
     virtual UTexture* GetTexture(INT Count,AActor* Owner);
+};
+
+//=============================================================================
+// FMeshMaterial — moved here so ULodMesh::Materials can reference it
+//=============================================================================
+struct FMeshMaterial
+{
+    DWORD PolyFlags;
+    INT   TextureIndex;
 };
 
 class ENGINE_API ULodMesh : public UMesh
@@ -841,7 +853,8 @@ public:
     UBOOL IsIn(UObject* Outer) const;
     UBOOL IsInZone(const AZoneInfo* Zone) const;
     UBOOL IsOwnedBy(const AActor* Other) const;
-    FLOAT LifeFraction() const;   // returns fraction of lifespan remaining
+    FLOAT LifeFraction();              // non-const version in Engine.lib
+    FLOAT LifeFraction() const { return const_cast<AActor*>(this)->LifeFraction(); }
     AActor* GetTopOwner();
 
     // Script events
@@ -1169,10 +1182,12 @@ public:
     BYTE             Fullscreen;
     UBOOL         FullscreenOnly;
     UBOOL         PrefersDeferredLoad;
+    INT           HitX, HitY, HitXL, HitYL;  // selection hit-test region
     virtual HWND  GetWindow() { return nullptr; }
     virtual UBOOL ResizeViewport(DWORD BlitType, INT NewX, INT NewY, INT NewColorBytes=0) { return 1; }
 
-    UBOOL IsOrtho()    const;
+    UBOOL IsOrtho();           // non-const in Engine.lib
+    UBOOL IsOrtho() const { return const_cast<UViewport*>(this)->IsOrtho(); }
     UBOOL IsRealtime() const;
     UBOOL IsWire()     const;
     BYTE  ByteID();
@@ -1237,7 +1252,7 @@ public:
     void CompactActors();
     void Destroy() override;
     INT  GetActorIndex(AActor* Actor);
-    void SetActorZone(AActor* Actor,UBOOL bTest,UBOOL bForce);
+    void SetActorZone(AActor* Actor,UBOOL bTest,UBOOL bForce) {}
 
     static UClass* StaticClass();
     static void InternalConstructor(void* X);
@@ -1426,15 +1441,6 @@ class ENGINE_API UFont : public UObject
 public:
     TArray<struct FFontPage> Pages;
     static UClass* StaticClass();
-};
-
-//=============================================================================
-// FMeshMaterial
-//=============================================================================
-struct FMeshMaterial
-{
-    DWORD PolyFlags;
-    INT   TextureIndex;
 };
 
 //=============================================================================

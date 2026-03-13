@@ -117,29 +117,29 @@ public:
     static FStampedPoint*    PointCache;
 
     // Virtual methods from Render.dll
-    virtual void  Init(UEngine* Engine) override;
-    virtual void  Destroy();
-    virtual UBOOL Exec(const ANSICHAR* Cmd,FOutputDevice& Ar);
-    virtual void  PreRender(FSceneNode* Frame);
-    virtual void  PostRender(FSceneNode* Frame);
-    virtual void  DrawWorld(FSceneNode* Frame);
-    virtual void  DrawActor(FSceneNode* Frame,AActor* Actor);
-    virtual void  DrawStats(FSceneNode* Frame);
-    virtual void  DrawPaths(FSceneNode* Frame);
-    virtual void  DrawBox(FSceneNode* Frame,FPlane Color,DWORD LineFlags,FVector Min,FVector Max);
-    virtual void  DrawCircle(FSceneNode* Frame,FPlane Color,DWORD LineFlags,FVector& Origin,FLOAT Radius);
-    virtual UBOOL BoundVisible(FSceneNode* Frame,FBox* Box,FSpanBuffer* SpanBuffer,FScreenBounds& Bounds);
-    virtual UBOOL Project(FSceneNode* Frame,const FVector& V,FLOAT& ScreenX,FLOAT& ScreenY,FLOAT* Scale);
-    virtual UBOOL Deproject(FSceneNode* Frame,INT ScreenX,INT ScreenY,FVector& V);
-    virtual void  GetVisibleSurfs(UViewport* Viewport,TArray<INT>& VisibleSurfs);
-    virtual FSceneNode* CreateMasterFrame(UViewport* Viewport,FVector CameraLocation,FRotator CameraRotation,FScreenBounds* Bounds);
-    virtual FSceneNode* CreateChildFrame(FSceneNode* Frame,FSpanBuffer* SpanBuffer,ULevel* Level,INT iSurf,INT iZone,FLOAT Mirror,const FPlane& NearClip,const FCoords& Coords,FScreenBounds* Bounds);
-    virtual void  FinishMasterFrame();
-    virtual void  Precache(UViewport* Viewport);
-    virtual void  GlobalLighting(UBOOL Realtime,AActor* Owner,FLOAT& Brightness,FPlane& Color);
-    virtual AZoneInfo* GetFogZone(ULevel* Level,INT ZoneNum);
-    virtual void  SetDistanceClipping(FSceneNode* Frame);
-    virtual void  SetDistanceFogging(FSceneNode* Frame);
+    virtual void  Init(UEngine* Engine) override {}
+    virtual void  Destroy() {}
+    virtual UBOOL Exec(const ANSICHAR* Cmd,FOutputDevice& Ar) { return 0; }
+    virtual void  PreRender(FSceneNode* Frame) {}
+    virtual void  PostRender(FSceneNode* Frame) {}
+    virtual void  DrawWorld(FSceneNode* Frame) {}
+    virtual void  DrawActor(FSceneNode* Frame,AActor* Actor) {}
+    virtual void  DrawStats(FSceneNode* Frame) {}
+    virtual void  DrawPaths(FSceneNode* Frame) {}
+    virtual void  DrawBox(FSceneNode* Frame,FPlane Color,DWORD LineFlags,FVector Min,FVector Max) {}
+    virtual void  DrawCircle(FSceneNode* Frame,FPlane Color,DWORD LineFlags,FVector& Origin,FLOAT Radius) {}
+    virtual UBOOL BoundVisible(FSceneNode* Frame,FBox* Box,FSpanBuffer* SpanBuffer,FScreenBounds& Bounds) { return 0; }
+    virtual UBOOL Project(FSceneNode* Frame,const FVector& V,FLOAT& ScreenX,FLOAT& ScreenY,FLOAT* Scale) { return 0; }
+    virtual UBOOL Deproject(FSceneNode* Frame,INT ScreenX,INT ScreenY,FVector& V) { return 0; }
+    virtual void  GetVisibleSurfs(UViewport* Viewport,TArray<INT>& VisibleSurfs) {}
+    virtual FSceneNode* CreateMasterFrame(UViewport* Viewport,FVector CameraLocation,FRotator CameraRotation,FScreenBounds* Bounds) { return nullptr; }
+    virtual FSceneNode* CreateChildFrame(FSceneNode* Frame,FSpanBuffer* SpanBuffer,ULevel* Level,INT iSurf,INT iZone,FLOAT Mirror,const FPlane& NearClip,const FCoords& Coords,FScreenBounds* Bounds) { return nullptr; }
+    virtual void  FinishMasterFrame() {}
+    virtual void  Precache(UViewport* Viewport) {}
+    virtual void  GlobalLighting(UBOOL Realtime,AActor* Owner,FLOAT& Brightness,FPlane& Color) {}
+    virtual AZoneInfo* GetFogZone(ULevel* Level,INT ZoneNum) { return nullptr; }
+    virtual void  SetDistanceClipping(FSceneNode* Frame) {}
+    virtual void  SetDistanceFogging(FSceneNode* Frame) {}
 
     // Non-virtual utility methods
     void OccludeBsp(FSceneNode* Frame);
@@ -158,7 +158,7 @@ public:
     void PrepareProjectedShadow(FDynamicSprite* Sprite,FSceneNode* Frame,FTransTexture* Pts,FMeshWedge* Wedge);
     void VARARGS ShowStat(FSceneNode* Frame,const ANSICHAR* Fmt,...);
 
-    static void StaticConstructor(UClass* clazz);
+    static void StaticConstructor(UClass* clazz) {}  // DS9: lib has no-arg instance version; stub static
     static UClass* StaticClass();
     static void InternalConstructor(void* X);
     static UClass PrivateStaticClass;

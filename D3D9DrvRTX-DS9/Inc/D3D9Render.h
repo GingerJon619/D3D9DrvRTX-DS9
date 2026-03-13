@@ -24,6 +24,10 @@ class UD3D9Render : public URender {
 #else
 	void StaticConstructor();
 #endif
+	// DS9 compat: override dllimport virtuals so our vtable has concrete implementations
+	virtual FString GetStateName() const override { return FString(TEXT("None")); }
+	virtual void CallFunction(struct FFrame& Stack, void* Result, class UFunction* F) override {}
+	virtual void DrawStats(FSceneNode* Frame) override {}
 	
 	// URenderBase interface
 	void DrawWorld(FSceneNode* Frame) override;

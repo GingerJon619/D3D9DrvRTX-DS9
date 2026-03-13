@@ -455,7 +455,7 @@ void UD3D9Render::drawFrame(FSceneNode* frame, UD3D9RenderDevice* d3d9Dev, Model
 	guard(UD3D9Render::drawFrame);
 	// Add all actors in view and also any in zones that are visible
 	std::unordered_set<AActor*> visibleActors;
-	std::unordered_set<ABrush*> visibleMovers;
+	std::unordered_set<AActor*> visibleMovers;
 	std::bitset<64> visibleZoneBits;
 	visibleZoneBits[frame->ZoneNumber] = true;
 	for (FBspDrawList*& pass : frame->Draw) {
@@ -569,8 +569,8 @@ void UD3D9Render::drawFrame(FSceneNode* frame, UD3D9RenderDevice* d3d9Dev, Model
 			}
 		}
 		if (pass == RPASS::SOLID) {
-			for (ABrush* mover : visibleMovers) {
-				d3d9Dev->renderMover(frame, mover);
+			for (AActor* moverActor : visibleMovers) {
+				d3d9Dev->renderMover(frame, static_cast<ABrush*>(moverActor));
 			}
 		}
 		for (AActor* actor : visibleActors) {
