@@ -1,0 +1,29 @@
+{
+  "$schema": "D3D9DrvRTX_config_schema.json",
+  "level_properties_default": {
+    "config_vars": {}
+  },
+  "level_properties": {
+    "DS9Entry": {
+      "comment": "Terok Nor station interior entry level",
+      "anchors": [
+        {
+          "name": "ds9_skybox_anchor",
+          "anim_type": "static",
+          "start_loc": [0, 0, 0]
+        }
+      ]
+    },
+    "DS9Promenade": {
+      "comment": "Promenade level - station hub",
+      "anchors": [
+        {
+          "name": "promenade_skybox",
+          "anim_type": "static",
+          "start_loc": [0, 0, 8192]
+        }
+      ]
+    }
+  },
+  "hash_tex_blacklist": []
+}
